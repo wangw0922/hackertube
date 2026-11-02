@@ -1,0 +1,543 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HackerTube</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23ff6600'/%3E%3Cpath d='M12 8l12 8-12 8z' fill='%23fff'/%3E%3C/svg%3E">
+<style>
+:root{--bg:#fff;--bg2:#f2f2f2;--bg3:#e3e3e3;--fg:#0f0f0f;--muted:#606060;--accent:#ff6600;--link:#065fd4}
+[data-theme=dark]{--bg:#0f0f0f;--bg2:#272727;--bg3:#3f3f3f;--fg:#f1f1f1;--muted:#aaa;--link:#7ab7ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.45 system-ui,-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+a{color:inherit;text-decoration:none}
+.dur{position:absolute;right:6px;bottom:6px;background:#000c;color:#fff;border-radius:4px;padding:1px 5px;font-size:12px;font-weight:600}
+a.playbtn{display:flex;align-items:center;justify-content:center}
+a.playbtn.out{width:auto;padding:0 20px;font-size:15px;font-weight:600}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.top{position:fixed;inset:0 0 auto 0;height:56px;display:flex;align-items:center;gap:8px;padding:0 16px;background:var(--bg);z-index:30}
+.ib{border:0;background:none;border-radius:50%;min-width:40px;height:40px;font-size:18px}
+.ib:hover{background:var(--bg2)}
+.logo{font-size:20px;font-weight:700;letter-spacing:-.5px;margin-right:8px}
+.logo b{color:var(--accent)}
+#sf{flex:1;min-width:0;display:flex;max-width:640px;margin:0 auto}
+#q{flex:1;min-width:0;height:38px;border:1px solid var(--bg3);border-radius:19px 0 0 19px;padding:0 16px;background:var(--bg);color:var(--fg);font:inherit}
+#sf button{height:38px;width:56px;border:1px solid var(--bg3);border-left:0;border-radius:0 19px 19px 0;background:var(--bg2)}
+#lang{font-size:14px;font-weight:700}
+.side{position:fixed;top:56px;bottom:0;left:0;width:240px;overflow:auto;padding:12px;background:var(--bg);z-index:20}
+.side a{display:flex;align-items:center;gap:20px;height:40px;padding:0 12px;border-radius:10px}
+.side a:hover{background:var(--bg2)}
+.side a[aria-current=page]{background:var(--bg2);font-weight:600}
+.side i{font-style:normal;width:24px;text-align:center;font-size:18px}
+.side hr{border:0;border-top:1px solid var(--bg3);margin:8px 0}
+body.collapsed .side{width:72px;padding:4px}
+body.collapsed .side a{flex-direction:column;gap:2px;height:64px;justify-content:center;padding:0;font-size:10px;text-align:center}
+body.collapsed .side hr{display:none}
+main{margin-left:240px;padding:72px 16px 48px}
+body.collapsed main{margin-left:72px}
+.scrim{display:none}
+@media(max-width:800px){
+ main,body.collapsed main{margin-left:0}
+ .side,body.collapsed .side{transform:translateX(-100%);transition:transform .2s;width:240px;padding:12px;box-shadow:2px 0 12px #0004}
+ body.collapsed .side a{flex-direction:row;gap:20px;height:40px;padding:0 12px;font-size:14px;justify-content:flex-start;text-align:left}
+ body.drawer .side{transform:none}
+ body.drawer .scrim{display:block;position:fixed;inset:56px 0 0 0;background:#0006;z-index:10}
+}
+@media(max-width:480px){.logo{display:none}.top{gap:2px}}
+.pagehead{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin:0 0 12px}
+.pagehead h1,.pagehead h2{margin:0;font-size:22px}
+.crumb{color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:24px 16px}
+.card{position:relative;min-width:0;border-radius:12px}
+.card.sel,.rel.sel{outline:2px solid var(--accent);outline-offset:4px}
+.thumb{display:block;position:relative;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:var(--bg2)}
+.thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.later{position:absolute;top:6px;right:6px;width:32px;height:32px;border:0;border-radius:6px;background:#000b;color:#fff;font-size:16px;opacity:0}
+.card:hover .later,.later:focus-visible,.later[aria-pressed=true]{opacity:1}
+@media(hover:none){.later{opacity:1}}
+.meta{padding:10px 2px 0}
+.ttl{font-weight:600;font-size:15px;line-height:21px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.sub{color:var(--muted);font-size:13px}
+.note{color:var(--muted);font-size:13px;margin:6px 0 0}
+.status{color:var(--muted);text-align:center;padding:24px 0;min-height:1px}
+.pill{display:inline-block;border:0;border-radius:8px;background:var(--bg2);padding:6px 12px;margin:0 6px 6px 0;font-size:13px}
+.pill:hover{background:var(--bg3)}
+.pill[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.pill.sm{padding:3px 9px;font-size:12px}
+.fbar{margin:0 0 16px}
+.fpanel{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;max-width:1100px;padding:16px 0;border-bottom:1px solid var(--bg3)}
+.fpanel[hidden]{display:none}
+.fpanel h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+.badge{background:var(--accent);color:#fff;border-radius:9px;padding:0 6px;margin-left:6px;font-size:11px}
+.areas{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.areacard{background:var(--bg2);border-radius:12px;padding:14px}
+.areacard h3{margin:0 0 8px;font-size:16px}
+.areacard a.c{display:flex;justify-content:space-between;gap:8px;padding:3px 0}
+.areacard a.c:hover{color:var(--accent)}
+.areacard a.c span:last-child{color:var(--muted)}
+.plgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:24px 16px}
+.mosaic{position:relative;display:grid;grid-template-columns:1fr 1fr;gap:2px;aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:var(--bg2)}
+.mosaic img{width:100%;height:100%;object-fit:cover;display:block}
+.cnt{position:absolute;right:8px;bottom:8px;background:#000c;color:#fff;border-radius:4px;padding:1px 6px;font-size:12px}
+.watch{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;max-width:1500px}
+@media(max-width:1000px){.watch{grid-template-columns:minmax(0,1fr)}}
+.player{position:relative;aspect-ratio:16/9;background:#000;border-radius:12px;overflow:hidden}
+.player img,.player iframe{position:absolute;inset:0;width:100%;height:100%;border:0;object-fit:cover}
+.playbtn{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:72px;height:50px;border:0;border-radius:14px;background:var(--accent);color:#fff;font-size:26px}
+.wt{font-size:20px;line-height:28px;margin:12px 0 4px}
+.wrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:8px 0}
+.wrow .ch{font-weight:600;margin-right:auto}
+.btn{border:0;background:var(--bg2);border-radius:18px;padding:0 16px;height:36px;display:inline-flex;align-items:center;gap:6px}
+.btn:hover{background:var(--bg3)}
+.btn[aria-pressed=true]{background:var(--fg);color:var(--bg)}
+.box{background:var(--bg2);border-radius:12px;padding:12px 14px;margin:12px 0}
+.stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px 16px;margin:0}
+.stats dt{color:var(--muted);font-size:12px}
+.stats dd{margin:0;font-weight:600}
+.why{border-left:3px solid var(--accent);padding-left:12px;color:var(--muted)}
+.cm{border-top:1px solid var(--bg3);padding:12px 0}
+.cm .who{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;font-size:13px;color:var(--muted)}
+.cm .who b{color:var(--fg)}
+.cm p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.st{border-radius:4px;padding:0 6px;font-size:12px;background:var(--bg3);color:var(--fg)}
+.st-strong_rec{background:var(--accent);color:#fff}.st-rec{background:#2e7d32;color:#fff}.st-critical{background:#b3261e;color:#fff}
+.vm{color:var(--accent);font-weight:600}.lm{color:var(--muted)}
+.rel{display:flex;gap:8px;margin-bottom:12px;border-radius:12px}
+.rel .thumb{flex:0 0 168px;width:168px}
+.rel .meta{padding:0;min-width:0}
+.rel .ttl{font-size:14px;line-height:19px}
+.via{display:inline-block;margin-top:4px;font-size:11px;background:var(--bg2);border-radius:4px;padding:0 5px;color:var(--muted)}
+.prose{max-width:760px}.prose h2{margin:24px 0 4px;font-size:17px}.prose p{margin:0 0 8px}.prose a{color:var(--link);text-decoration:underline}
+.row{margin:0 0 20px}.row h3{margin:0 0 8px;font-size:15px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:10px 18px;border-radius:8px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw}
+#toast.on{opacity:1}
+#help{display:none;position:fixed;inset:0;background:#0008;z-index:50;align-items:center;justify-content:center;padding:16px}
+#help.on{display:flex}
+.hc{background:var(--bg);border-radius:12px;padding:20px 24px;max-width:480px;width:100%;max-height:90vh;overflow:auto}
+.hc h3{margin:0 0 12px}.hc table{width:100%;border-collapse:collapse}.hc td{padding:5px 0;vertical-align:top}.hc td:first-child{white-space:nowrap;padding-right:16px}
+kbd{border:1px solid var(--bg3);border-bottom-width:2px;border-radius:4px;padding:0 6px;background:var(--bg2);font:12px ui-monospace,monospace}
+</style>
+</head>
+<body>
+<header class="top">
+  <button class="ib" id="menu">☰</button>
+  <a class="logo" href="/">Hacker<b>Tube</b></a>
+  <form id="sf" role="search"><input id="q" type="search" autocomplete="off" maxlength="200"><button type="submit">⌕</button></form>
+  <button class="ib" id="lang"></button>
+  <button class="ib" id="theme">◐</button>
+</header>
+<nav class="side" id="side"></nav>
+<div class="scrim" id="scrim"></div>
+<main id="view"></main>
+<div id="help"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script src="/i18n.js"></script>
+<script>
+"use strict";
+// ---------- helpers ----------
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const mem = {};
+const store = { // localStorage may throw (private mode, blocked): fall back to memory
+  get(k, d) { try { const v = localStorage.getItem('ht.' + k); return v === null ? (k in mem ? mem[k] : d) : JSON.parse(v); } catch { return k in mem ? mem[k] : d; } },
+  set(k, v) { mem[k] = v; try { localStorage.setItem('ht.' + k, JSON.stringify(v)); } catch {} },
+};
+const view = $('#view');
+
+// ---------- i18n ----------
+let lang = store.get('lang', null) ?? (/^zh/i.test(navigator.language) ? 'zh' : 'en');
+if (!I18N[lang]) lang = 'en';
+const nfs = {}, prs = {}, cfs = {}, rts = {};
+let hasMeta = false; // YouTube metadata present (from /api/stats): all duration/views/date UI is gated on it
+const cnf = () => (cfs[lang] ??= new Intl.NumberFormat(lang, { notation: 'compact' }));
+const AGE = [['year', 365.25 * 864e5], ['month', 30.44 * 864e5], ['week', 7 * 864e5], ['day', 864e5], ['hour', 36e5], ['minute', 6e4]];
+const ago = (ms) => { const d = Date.now() - ms, u = AGE.find((x) => d >= x[1]) ?? AGE[5]; return (rts[lang] ??= new Intl.RelativeTimeFormat(lang, { numeric: 'auto' })).format(-Math.max(0, Math.floor(d / u[1])), u[0]); };
+const clock = (s) => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), x = String(Math.floor(s % 60)).padStart(2, '0'); return h ? `${h}:${String(m).padStart(2, '0')}:${x}` : `${m}:${x}`; };
+const badge = (it) => (it.dur ? `<span class="dur">${clock(it.dur)}</span>` : '');
+const vline = (it) => { // "55K views · 7 years ago"; null parts are skipped
+  const a = []; if (it.views != null) a.push(t('card.views', { n: it.views, c: cnf().format(it.views) })); if (it.pub != null) a.push(ago(it.pub));
+  return a.length ? `<div class="sub">${esc(a.join(' · '))}</div>` : '';
+};
+const gemsHint = () => t(hasMeta ? 'f.gems_hint_meta' : 'f.gems_hint');
+const nf = () => (nfs[lang] ??= new Intl.NumberFormat(lang));
+const yf = (y) => new Intl.NumberFormat(lang, { useGrouping: false }).format(y);
+const fmtMonth = (m) => new Intl.DateTimeFormat(lang, { year: 'numeric', month: 'short', timeZone: 'UTC' }).format(new Date(m + '-01T00:00:00Z'));
+function t(k, v) {
+  const d = I18N[lang], pk = v && typeof v.n === 'number' ? k + '_' + (prs[lang] ??= new Intl.PluralRules(lang)).select(v.n) : null;
+  const s = (pk && d[pk]) ?? d[k] ?? I18N.en[k] ?? k;
+  return v ? s.replace(/\{(\w+)\}/g, (m, x) => (x in v ? (typeof v[x] === 'number' ? nf().format(v[x]) : v[x]) : m)) : s;
+}
+const rich = (k, links) => { // translated text with a few trusted anchors; text itself is escaped
+  let s = esc(t(k, Object.fromEntries(Object.keys(links).map((x) => [x, `‹${x}›`]))));
+  for (const [x, h] of Object.entries(links)) s = s.replace(`‹${x}›`, h);
+  return s;
+};
+const areaName = (id, en) => (lang === 'zh' && ZH_TAX[id]) || en;
+const yr = (a, b) => (a === b ? yf(a) : `${yf(a)}–${yf(b)}`);
+
+// ---------- state ----------
+let likes = store.get('likes', []), dislikes = store.get('dislikes', []), later = store.get('later', []), history_ = store.get('history', []);
+let themePref = store.get('theme', 'auto'), thumbMode = store.get('thumb', 'frame');
+let seed = (Math.random() * 2 ** 31) | 0, rid = 0, cur = null, filtersOpen = false;
+const cache = {};
+const api = async (url) => {
+  if (cache[url]) return cache[url];
+  const r = await fetch(url);
+  if (!r.ok) throw Object.assign(new Error(url), { status: r.status });
+  const j = await r.json();
+  if (/^\/api\/(browse|stats|playlists)$/.test(url)) cache[url] = j;
+  return j;
+};
+const setTitle = (s) => { document.title = s ? `${s} - HackerTube` : 'HackerTube'; };
+const thumb = (vid) => `https://i.ytimg.com/vi/${encodeURIComponent(vid)}/${thumbMode === 'custom' ? 'hqdefault' : 'hq2'}.jpg`;
+
+// ---------- chrome ----------
+const NAV = [['/', 'nav.home', '⌂'], ['/playlists', 'nav.playlists', '▤'], ['/categories', 'nav.categories', '▦'], ['/browse', 'nav.browse', '⌕'], ['/browse?dur=xlong', 'nav.longs', '⏱', 1], 0,
+  ['/liked', 'nav.liked', '♥'], ['/history', 'nav.history', '↺'], ['/later', 'nav.later', '◷'], 0, ['/settings', 'nav.settings', '⚙'], ['/about', 'nav.about', 'ⓘ']];
+function chrome() {
+  document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+  $('#side').setAttribute('aria-label', t('nav.aria'));
+  $('#side').innerHTML = NAV.filter((n) => !n[3] || hasMeta).map((n) => (n ? `<a href="${n[0]}"><i aria-hidden="true">${n[2]}</i><span>${esc(t(n[1]))}</span></a>` : '<hr>')).join('');
+  $('#menu').setAttribute('aria-label', t('nav.menu')); $('#menu').title = t('nav.collapse');
+  $('#q').placeholder = t('top.search_ph'); $('#q').setAttribute('aria-label', t('top.search_aria'));
+  $('#sf button').setAttribute('aria-label', t('top.search'));
+  const l = $('#lang'); l.textContent = t('lang.toggle'); l.setAttribute('aria-label', t('lang.toggle_aria')); l.title = t('lang.toggle_aria');
+  applyTheme();
+  if ($('#help').classList.contains('on')) toggleHelp(true);
+}
+const darkNow = () => themePref === 'dark' || (themePref === 'auto' && matchMedia('(prefers-color-scheme: dark)').matches);
+function applyTheme() {
+  document.documentElement.dataset.theme = darkNow() ? 'dark' : 'light';
+  const b = $('#theme'); b.setAttribute('aria-label', t(darkNow() ? 'top.to_light' : 'top.to_dark')); b.title = b.getAttribute('aria-label');
+}
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+function setLang(l) { lang = l; store.set('lang', l); chrome(); route(false); }
+let toastT;
+function toast(msg) { const e = $('#toast'); e.textContent = msg; e.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => e.classList.remove('on'), 2200); }
+
+// ---------- cards ----------
+const laterBtn = (vid) => { const on = later.includes(vid); const l = t(on ? 'card.later_remove' : 'card.later_add');
+  return `<button class="later" data-later="${esc(vid)}" aria-pressed="${on}" aria-label="${esc(l)}" title="${esc(l)}">${on ? '✓' : '◷'}</button>`; };
+function card(it) {
+  const why = it.reason ? t('reason.' + it.reason + (hasMeta && it.reason === 'gem' ? '_meta' : '')) : '';
+  return `<div class="card" data-vid="${esc(it.vid)}"${why ? ` title="${esc(why)}"` : ''}>
+    <a class="thumb" href="/watch/${esc(it.vid)}" tabindex="-1" aria-hidden="true"><img loading="lazy" alt="" src="${esc(thumb(it.vid))}">${badge(it)}</a>${laterBtn(it.vid)}
+    <div class="meta"><a class="ttl" href="/watch/${esc(it.vid)}">${esc(it.title)}</a><div class="sub">${esc(it.channel)}</div>${vline(it)}
+    <div class="sub">${esc(t('card.recs', { n: it.recs }))} · ${esc(yr(it.first, it.last))}</div>${it.note ? `<p class="note">${esc(it.note)}</p>` : ''}</div></div>`;
+}
+const relCard = (it) => `<div class="rel" data-vid="${esc(it.vid)}"><a class="thumb" href="/watch/${esc(it.vid)}" tabindex="-1" aria-hidden="true"><img loading="lazy" alt="" src="${esc(thumb(it.vid))}">${badge(it)}</a>
+  <div class="meta"><a class="ttl" href="/watch/${esc(it.vid)}">${esc(it.title)}</a><div class="sub">${esc(it.channel)}</div>${vline(it)}
+  <div class="sub">${esc(t('card.recs', { n: it.recs }))} · ${esc(yr(it.first, it.last))}</div><span class="via">${esc(t(it.via === 'hn' ? 'watch.via_hn' : 'watch.via_similar'))}</span></div></div>`;
+document.addEventListener('error', (e) => { const i = e.target; if (i.tagName === 'IMG' && i.src.includes('/hq2.jpg')) i.src = i.src.replace('/hq2.jpg', '/hqdefault.jpg'); }, true);
+
+function infinite(grid, fetchPage, mk = card) {
+  const my = rid; let offset = 0, done = false, busy = false;
+  const st = document.createElement('div'); st.className = 'status'; grid.after(st);
+  const io = new IntersectionObserver((es) => { if (es[0].isIntersecting) load(); }, { rootMargin: '700px' });
+  async function load() {
+    if (busy || done) return;
+    if (my !== rid) return io.disconnect();
+    busy = true; st.textContent = t('state.loading');
+    try {
+      const r = await fetchPage(offset);
+      if (my !== rid) return;
+      grid.insertAdjacentHTML('beforeend', r.items.map(mk).join(''));
+      offset += r.items.length; done = !r.more;
+      st.textContent = done ? t(offset ? 'state.end' : 'state.empty') : '';
+      if (!done) { io.unobserve(st); io.observe(st); }
+    } catch { st.innerHTML = `${esc(t('state.error'))} <button class="pill" data-act="retry">${esc(t('state.retry'))}</button>`; st._load = load; }
+    finally { busy = false; }
+  }
+  io.observe(st);
+}
+
+// ---------- filters ----------
+const FTYPES = ['talk', 'lecture', 'course', 'documentary', 'explainer', 'interview', 'podcast', 'tutorial', 'demo', 'news', 'commentary', 'comedy', 'music', 'other'];
+const FLEVELS = ['intro', 'general', 'intermediate', 'advanced'];
+const FSORTS = ['relevance', 'recent', 'hn'], FDURS = ['short', 'medium', 'long', 'xlong'], FDATES = ['year', '2020s', '2010s', '2000s'];
+const urlP = () => new URLSearchParams(location.search);
+const fOpt = (key, val, label, on) => `<button class="pill" data-f="${key}" data-v="${esc(val)}" aria-pressed="${on}">${esc(label)}</button>`;
+function filterBar(base, fromHome) {
+  const p = fromHome ? new URLSearchParams() : urlP();
+  const n = ['type', 'level', 'gems', 'evergreen', ...(hasMeta ? ['dur', 'date'] : [])].filter((k) => p.get(k)).length + (p.get('sort') && p.get('sort') !== 'relevance' ? 1 : 0);
+  const g = (h, body) => `<div><h4>${esc(t(h))}</h4>${body}</div>`;
+  return `<div class="fbar" data-base="${esc(base)}"><button class="btn" data-act="filters" aria-expanded="${filtersOpen}">${esc(t('f.filters'))}${n ? `<span class="badge">${n}</span>` : ''}</button>
+    ${n ? ` <button class="pill" data-act="fclear">${esc(t('f.clear'))}</button>` : ''}
+    <div class="fpanel" role="group" aria-label="${esc(t('f.aria'))}"${filtersOpen ? '' : ' hidden'}>
+    ${g('f.type', FTYPES.map((x) => fOpt('type', x, t('type.' + x), p.get('type') === x)).join(''))}
+    ${g('f.level', FLEVELS.map((x) => fOpt('level', x, t('level.' + x), p.get('level') === x)).join(''))}
+    ${g('f.features', fOpt('gems', '1', t('f.gems'), p.get('gems') === '1') + fOpt('evergreen', '1', t('f.evergreen'), p.get('evergreen') === '1'))}
+    ${hasMeta ? g('f.dur', FDURS.map((x) => fOpt('dur', x, t('dur.' + x), p.get('dur') === x)).join('')) + g('f.date', FDATES.map((x) => fOpt('date', x, t('date.' + x), p.get('date') === x)).join('')) : ''}
+    ${g('f.sort', (hasMeta ? [...FSORTS, 'date', 'old', 'views', 'liked'] : FSORTS).map((x) => fOpt('sort', x, t('sort.' + x), (p.get('sort') || 'relevance') === x)).join(''))}</div>
+    ${p.get('gems') === '1' ? `<p class="note">${esc(gemsHint())}</p>` : ''}</div>`;
+}
+function onFilter(b) {
+  const bar = b.closest('.fbar'), base = bar.dataset.base;
+  const p = base === '/browse' && location.pathname === '/' ? new URLSearchParams() : urlP();
+  const k = b.dataset.f, v = b.dataset.v;
+  if (p.get(k) === v) p.delete(k); else p.set(k, v);
+  go(base + (p.size ? '?' + p : ''));
+}
+const listQS = (extra) => { const p = urlP(), o = new URLSearchParams(extra); for (const k of ['type', 'level', 'gems', 'evergreen', 'sort', 'dur', 'date']) if (p.get(k)) o.set(k, p.get(k)); return o; };
+
+// ---------- pages ----------
+const head = (h, extra = '') => `<div class="pagehead"><h1>${esc(h)}</h1>${extra}</div>`;
+const notFound = (k = 'nf.page') => { setTitle(t('title.notfound')); view.innerHTML = head(t('title.notfound')) + `<p>${esc(t(k))}</p><a class="btn" href="/">${esc(t('nf.home'))}</a>`; };
+const gridFeed = (fn) => infinite($('#grid'), fn);
+
+function home() {
+  setTitle('');
+  view.innerHTML = filterBar('/browse', true) + '<div class="grid" id="grid"></div>';
+  gridFeed((o) => api('/api/feed?' + new URLSearchParams({ like: likes.slice(-30).join(','), dislike: dislikes.slice(-100).join(','), seen: history_.slice(0, 150).join(','), seed, offset: o, n: 36 })));
+}
+function browse() {
+  const h = t(hasMeta && urlP().get('dur') === 'xlong' ? 'title.longs' : 'title.browse');
+  setTitle(h);
+  view.innerHTML = head(h) + filterBar('/browse') + '<div class="grid" id="grid"></div>';
+  gridFeed((o) => api('/api/list?' + listQS({ offset: o })));
+}
+function searchPage() {
+  const q = (urlP().get('q') ?? '').trim();
+  $('#q').value = q;
+  if (!q) { setTitle(t('nav.browse')); view.innerHTML = head(t('search.hint')); return; }
+  setTitle(t('title.search', { q }));
+  view.innerHTML = head(t('search.results', { q })) + filterBar('/search') + '<div class="grid" id="grid"></div>';
+  gridFeed(async (o) => { const r = await api('/api/search?' + listQS({ q, offset: o })); if (!r.items.length && !o) r.items = [], $('#grid').insertAdjacentHTML('beforebegin', `<p>${esc(t('search.none', { q }))}</p>`); return r; });
+}
+async function areaPage(id) {
+  const a = (await api('/api/browse')).find((x) => x.id === id);
+  if (!a) return notFound();
+  const n = areaName(a.id, a.name); setTitle(n);
+  view.innerHTML = head(n, `<span class="crumb">${esc(t('list.total', { n: a.count }))}</span>`)
+    + `<div class="row">${a.categories.map((c) => `<a class="pill" href="/c/${esc(c.id)}">${esc(areaName(c.id, c.name))} · ${esc(nf().format(c.count))}</a>`).join('')}</div>`
+    + filterBar('/a/' + encodeURIComponent(id)) + '<div class="grid" id="grid"></div>';
+  gridFeed((o) => api('/api/list?' + listQS({ area: id, offset: o })));
+}
+async function catPage(id) {
+  const areas = await api('/api/browse'), a = areas.find((x) => x.categories.some((c) => c.id === id));
+  if (!a) return notFound();
+  const c = a.categories.find((x) => x.id === id), n = areaName(c.id, c.name); setTitle(n);
+  view.innerHTML = head(n, `<span class="crumb"><a href="/a/${esc(a.id)}">${esc(areaName(a.id, a.name))}</a> · ${esc(t('list.total', { n: c.count }))}</span>`)
+    + filterBar('/c/' + encodeURIComponent(id)) + '<div class="grid" id="grid"></div>';
+  gridFeed((o) => api('/api/list?' + listQS({ cat: id, offset: o })));
+}
+async function categories() {
+  const areas = await api('/api/browse'); setTitle(t('cats.title'));
+  view.innerHTML = head(t('cats.title')) + `<div class="row"><a class="pill" href="/browse?sort=recent">${esc(t('cats.quick_recent'))}</a><a class="pill" href="/browse?gems=1">${esc(t('cats.quick_gems'))}</a><a class="pill" href="/browse">${esc(t('cats.quick_all'))}</a>${hasMeta ? `<a class="pill" href="/browse?dur=xlong">${esc(t('cats.quick_longs'))}</a>` : ''}</div>`
+    + `<div class="areas">${areas.map((a) => `<section class="areacard"><h3><a href="/a/${esc(a.id)}">${esc(areaName(a.id, a.name))}</a></h3>
+      ${a.categories.map((c) => `<a class="c" href="/c/${esc(c.id)}"><span>${esc(areaName(c.id, c.name))}</span><span>${esc(nf().format(c.count))}</span></a>`).join('')}</section>`).join('')}</div>`;
+}
+async function playlistsPage() {
+  const pls = await api('/api/playlists'); setTitle(t('pl.title'));
+  view.innerHTML = head(t('pl.title')) + `<p class="sub">${esc(t('pl.sub'))}</p><div class="plgrid">${pls.map((p) => `<div class="card"><a class="mosaic" href="/p/${esc(p.slug)}" tabindex="-1" aria-hidden="true">
+    ${p.cover.map((v) => `<img loading="lazy" alt="" src="${esc(thumb(v))}">`).join('')}<span class="cnt">${esc(t('pl.count', { n: p.count }))}</span></a>
+    <div class="meta"><a class="ttl" href="/p/${esc(p.slug)}">${esc(p.title)}</a><div class="sub">${esc(t('kind.' + p.kind))}</div><p class="note">${esc(p.pitch)}</p></div></div>`).join('')}</div>`;
+}
+async function playlistPage(slug) {
+  const p = await api('/api/playlist?slug=' + encodeURIComponent(slug)); setTitle(p.title);
+  view.innerHTML = head(p.title, `<span class="crumb">${esc(t('kind.' + p.kind))} · ${esc(t('pl.count', { n: p.items.length }))}</span>`) + `<p class="prose">${esc(p.pitch)}</p><p class="prose sub">${esc(p.intro)}</p>
+    <div class="grid" id="grid">${p.items.map(card).join('')}</div>`;
+}
+async function userList(kind) {
+  const ids = kind === 'liked' ? [...likes].reverse() : kind === 'later' ? [...later].reverse() : history_;
+  const title = t('page.' + kind); setTitle(title);
+  const btn = ids.length ? `<button class="pill" data-clear="${kind}">${esc(t(kind === 'history' ? 'clear.history' : kind === 'liked' ? 'clear.liked' : 'clear.later'))}</button>` : '';
+  view.innerHTML = head(title, btn);
+  if (!ids.length) { view.insertAdjacentHTML('beforeend', `<p>${esc(t('empty.' + kind))}</p>`); return; }
+  const my = rid, r = await api('/api/videos?ids=' + ids.slice(0, 300).join(','));
+  if (my === rid) view.insertAdjacentHTML('beforeend', `<div class="grid" id="grid">${r.items.map(card).join('')}</div>`);
+}
+function settings() {
+  setTitle(t('set.title'));
+  const seg = (attr, cur, opts) => opts.map(([v, l]) => `<button class="pill" ${attr}="${v}" aria-pressed="${cur === v}">${esc(l)}</button>`).join('');
+  view.innerHTML = head(t('set.title')) + `<div class="prose">
+    <div class="row"><h3>${esc(t('set.lang'))}</h3>${seg('data-lang', lang, Object.keys(I18N).map((l) => [l, I18N[l]['lang.name']]))}</div>
+    <div class="row"><h3>${esc(t('set.theme'))}</h3>${seg('data-theme-set', themePref, ['auto', 'light', 'dark'].map((x) => [x, t('theme.' + x)]))}</div>
+    <div class="row"><h3>${esc(t('set.thumb'))}</h3>${seg('data-thumb', thumbMode, [['frame', t('thumb.frame')], ['custom', t('thumb.custom')]])}</div>
+    <div class="row"><h3>${esc(t('set.data'))}</h3><button class="pill" data-clear="all">${esc(t('set.clear_all'))}</button></div>
+    <p class="sub">${esc(t('set.content_note'))}</p></div>`;
+}
+async function about() {
+  const s = await api('/api/stats'); setTitle(t('nav.about'));
+  const sec = (h, p) => `<h2>${esc(t(h))}</h2><p>${p}</p>`, at = (h, x) => `<a href="${h}" target="_blank" rel="noopener noreferrer">${esc(x)}</a>`;
+  view.innerHTML = `<div class="prose"><h1>${esc(t('about.title'))}</h1>
+    <p class="box">${esc(t('about.stats', { videos: s.videos, comments: s.comments, cats: s.categories, areas: s.areas, from: yf(s.fromYear), to: yf(s.toYear) }))}</p>
+    ${sec('about.what_h', esc(t('about.what')))}${sec('about.how_h', esc(t('about.how')))}${sec('about.diff_h', esc(t(hasMeta ? 'about.diff_meta' : 'about.diff')))}${hasMeta ? sec('about.yt_h', esc(t('about.yt'))) : ''}
+    ${sec('about.privacy_h', esc(t('about.privacy')))}${sec('about.unofficial_h', esc(t('about.unofficial')))}
+    ${sec('about.credit_h', rich('about.credit', { kp: at('https://x.com/karpathy/status/2116957135661945283', lang === 'zh' ? 'Andrej Karpathy 的帖子' : 'a post by Andrej Karpathy'), ht: at('https://hackertube.org', 'HackerTube'), ds: at('https://huggingface.co/datasets/open-index/hacker-news', 'open-index/hacker-news'), lic: at('https://opendatacommons.org/licenses/by/1-0/', 'ODC-By 1.0') }))}
+    <p class="sub">${esc(t('about.content_note'))}</p></div>`;
+}
+
+// ---------- watch ----------
+const ctext = (s) => esc(s).replace(/\[VIDEO\]/g, `<span class="vm">${esc(t('watch.this_video'))}</span>`).replace(/\[LINK\]/g, `<span class="lm">${esc(t('watch.link'))}</span>`);
+function btnsHTML() {
+  const v = cur.video.vid, L = likes.includes(v), D = dislikes.includes(v), W = later.includes(v);
+  const b = (act, on, key, onKey, g) => `<button class="btn" data-act="${act}" aria-pressed="${on}"><span aria-hidden="true">${g}</span>${esc(t(on ? onKey : key))}</button>`;
+  return b('like', L, 'watch.like', 'watch.liked', '♥') + b('dislike', D, 'watch.dislike', 'watch.disliked', '✕') + b('later', W, 'watch.later', 'watch.saved', '◷')
+    + `<a class="btn" href="${esc(cur.video.url)}" target="_blank" rel="noopener noreferrer">${esc(t('watch.youtube'))} ↗</a>`;
+}
+function watchInfo() {
+  const v = cur.video, h = v.hn, ent = (k, x) => (x ? `<div><dt>${esc(t(k))}</dt><dd>${esc(x)}</dd></div>` : ''), st = Object.entries(h.stances).map(([k, n]) => `${t('stance.' + k)} ${nf().format(n)}`).join(' · ');
+  $('#winfo').innerHTML = `<h1 class="wt">${esc(v.title)}</h1>${vline(v)}
+    <div class="wrow"><a class="ch" href="/search?q=${encodeURIComponent(v.channel)}">${esc(v.channel)}</a><span id="wbtns" class="wrow" style="margin:0">${btnsHTML()}</span></div>
+    <div class="box"><dl class="stats">
+      ${ent('stat.duration', v.dur && clock(v.dur))}${ent('stat.likes', v.likes != null && nf().format(v.likes))}${ent('stat.uploaded', v.pub != null && new Intl.DateTimeFormat(lang, { dateStyle: 'medium', timeZone: 'UTC' }).format(v.pub))}
+      <div><dt>${esc(t('stat.recs'))}</dt><dd>${esc(nf().format(h.recommenders))}</dd></div>
+      <div><dt>${esc(t('stat.months'))}</dt><dd>${esc(nf().format(h.rec_months))}</dd></div>
+      <div><dt>${esc(t('stat.strong'))}</dt><dd>${esc(nf().format(h.strong_recs))}</dd></div>
+      <div><dt>${esc(t('stat.span'))}</dt><dd>${esc(yr(h.first_year, h.last_year))}</dd></div>
+      <div><dt>${esc(t('watch.kind'))}</dt><dd>${esc(t('type.' + v.content_type))}</dd></div>
+      <div><dt>${esc(t('watch.level'))}</dt><dd>${esc(t('level.' + v.level))}</dd></div>
+      <div><dt>${esc(t('watch.shelf'))}</dt><dd>${esc(t('shelf.' + v.shelf_life))}</dd></div></dl>
+      <div class="sub" style="margin-top:8px">${esc(st)}${v.gem ? ` · <b title="${esc(gemsHint())}">${esc(t('watch.gem'))}</b>` : ''}</div></div>
+    <p>${esc(v.summary)}</p><p class="why">${esc(v.why_hn)}</p>
+    <div class="row"><h3>${esc(t('watch.categories'))}</h3>${v.categories.map((c) => `<a class="pill" href="/c/${esc(c.id)}">${esc(areaName(c.id, c.name))}</a>`).join('')}</div>
+    <div class="row"><h3>${esc(t('watch.tags'))}</h3>${v.tags.map((x) => `<a class="pill sm" href="/search?q=${encodeURIComponent(x)}">${esc(x)}</a>`).join('')}</div>
+    <h2>${esc(t('watch.comments'))} (${esc(nf().format(cur.mentions.length))})</h2>
+    ${cur.mentions.map((m) => `<div class="cm"><div class="who"><b>${esc(m.author)}</b><span class="st st-${esc(m.stance)}">${esc(t('stance.' + m.stance))}</span>
+      <span>${esc(fmtMonth(m.month))}</span><a href="${esc(m.url)}" target="_blank" rel="noopener noreferrer">${esc(t('watch.view_hn'))} ↗</a></div><p>${ctext(m.text)}</p></div>`).join('')}`;
+  $('#upnext').innerHTML = `<h2 style="font-size:16px;margin:0 0 12px">${esc(t('watch.related'))}</h2>` + (cur.rel ? cur.rel.map(relCard).join('') : '');
+  const pb = $('.playbtn'); if (pb) { if (pb.tagName === 'A') pb.textContent = t('watch.play_yt'); else pb.setAttribute('aria-label', t('watch.play')); }
+}
+const playEl = (v) => (v.embeddable === false // embedding disabled: link out instead of the player
+  ? `<a class="playbtn out" href="${esc(v.url)}" target="_blank" rel="noopener noreferrer">${esc(t('watch.play_yt'))}</a>` : '<button class="playbtn" data-act="play">▶</button>');
+async function watch(vid) {
+  if (!/^[\w-]{11}$/.test(vid)) return notFound('nf.video');
+  const same = view.dataset.w === vid && cur?.video.vid === vid; // language switch: keep the player node untouched
+  if (!same) {
+    let d;
+    try { d = await api('/api/video?vid=' + vid); } catch (e) { if (e.status === 404) return notFound('nf.video'); throw e; }
+    cur = { ...d, rel: null };
+    history_ = [vid, ...history_.filter((x) => x !== vid)].slice(0, 300); store.set('history', history_);
+    view.dataset.w = vid;
+    view.innerHTML = `<div class="watch"><div><div class="player" id="player"><img alt="" src="${esc(thumb(vid))}">${playEl(d.video)}</div><div id="winfo"></div></div><aside id="upnext"></aside></div>`;
+    api('/api/related?vid=' + vid + '&n=20').then((r) => { if (cur?.video.vid === vid) { cur.rel = r.items; $('#upnext').innerHTML = `<h2 style="font-size:16px;margin:0 0 12px">${esc(t('watch.related'))}</h2>` + r.items.map(relCard).join(''); } }).catch(() => {});
+  }
+  setTitle(cur.video.title); watchInfo();
+}
+function play() {
+  const p = $('#player'); if (!p || !cur || cur.video.embeddable === false) return;
+  p.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${encodeURIComponent(cur.video.vid)}?autoplay=1&rel=0" title="${esc(cur.video.title)}" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe>`;
+}
+
+// ---------- likes / later ----------
+function vote(vid, kind) {
+  const [a, b] = kind === 'like' ? [likes, dislikes] : [dislikes, likes], i = a.indexOf(vid);
+  if (i >= 0) { a.splice(i, 1); toast(t(kind === 'like' ? 'toast.unliked' : 'toast.undisliked')); }
+  else { a.push(vid); const j = b.indexOf(vid); if (j >= 0) b.splice(j, 1); toast(t(kind === 'like' ? 'toast.liked' : 'toast.disliked')); }
+  store.set('likes', likes); store.set('dislikes', dislikes);
+  if (cur?.video.vid === vid && $('#wbtns')) $('#wbtns').innerHTML = btnsHTML();
+}
+function toggleLater(vid) {
+  const i = later.indexOf(vid); if (i >= 0) later.splice(i, 1); else later.push(vid);
+  store.set('later', later); toast(t(i >= 0 ? 'toast.later_off' : 'toast.later_on'));
+  document.querySelectorAll(`[data-later="${CSS.escape(vid)}"]`).forEach((b) => { b.outerHTML = laterBtn(vid); });
+  if (cur?.video.vid === vid && $('#wbtns')) $('#wbtns').innerHTML = btnsHTML();
+  if (location.pathname === '/later') userList('later');
+}
+
+// ---------- router ----------
+function go(path) { if (path !== location.pathname + location.search) history.pushState(null, '', path); return route(true); }
+async function route(fresh = true) {
+  const my = ++rid;
+  if (fresh) { seed = (Math.random() * 2 ** 31) | 0; scrollTo(0, 0); }
+  document.body.classList.remove('drawer');
+  const path = location.pathname;
+  document.querySelectorAll('#side a').forEach((a) => (a.getAttribute('href') === path + (hasMeta && location.search === '?dur=xlong' ? location.search : '') ? a.setAttribute('aria-current', 'page') : a.removeAttribute('aria-current')));
+  if (!path.startsWith('/watch/')) { delete view.dataset.w; cur = null; }
+  if (path !== '/search') $('#q').value = '';
+  let arg; const [, pg, ...rest] = path.split('/');
+  try { arg = decodeURIComponent(rest.join('/')); } catch { return notFound(); }
+  try {
+    const R = { '': home, browse, search: searchPage, categories, playlists: playlistsPage, settings, about, liked: () => userList('liked'), history: () => userList('history'), later: () => userList('later'),
+      a: () => areaPage(arg), c: () => catPage(arg), p: () => playlistPage(arg), watch: () => watch(arg) };
+    const noArg = ['', 'browse', 'search', 'categories', 'playlists', 'settings', 'about', 'liked', 'history', 'later'];
+    if (!Object.hasOwn(R, pg) || (noArg.includes(pg) ? rest.length : !arg)) return notFound();
+    await R[pg]();
+  } catch (e) {
+    if (my !== rid) return;
+    if (e.status === 404) return notFound();
+    view.innerHTML = `<p>${esc(t('state.error'))}</p><button class="btn" data-act="retry-route">${esc(t('state.retry'))}</button>`;
+  }
+}
+
+// ---------- events ----------
+document.addEventListener('click', (e) => {
+  const el = e.target.closest('a[href^="/"],[data-later],[data-act],[data-f],[data-lang],[data-theme-set],[data-thumb],[data-clear],#help');
+  if (!el) return;
+  if (el.id === 'help') { if (e.target === el) toggleHelp(false); return; }
+  if (el.matches('a')) { if (e.defaultPrevented || e.button || e.metaKey || e.ctrlKey || e.shiftKey || el.target) return; e.preventDefault(); return go(el.getAttribute('href')); }
+  const d = el.dataset;
+  if (d.later) return toggleLater(d.later), e.preventDefault();
+  if (d.f) return onFilter(el);
+  if (d.lang) return setLang(d.lang);
+  if (d.themeSet) { themePref = d.themeSet; store.set('theme', themePref); applyTheme(); return settings(); }
+  if (d.thumb) { thumbMode = d.thumb; store.set('thumb', thumbMode); return settings(); }
+  if (d.clear) {
+    if (d.clear === 'all' && !confirm(t('set.confirm'))) return;
+    const k = { liked: ['likes'], history: ['history'], later: ['later'], all: ['likes', 'dislikes', 'history', 'later'] }[d.clear];
+    for (const x of k) store.set(x, []);
+    likes = store.get('likes', []); dislikes = store.get('dislikes', []); later = store.get('later', []); history_ = store.get('history', []);
+    toast(t('toast.cleared')); return route(false);
+  }
+  switch (d.act) {
+    case 'filters': filtersOpen = !filtersOpen; el.setAttribute('aria-expanded', filtersOpen); el.parentNode.querySelector('.fpanel').hidden = !filtersOpen; break;
+    case 'fclear': go(el.closest('.fbar').dataset.base + (el.closest('.fbar').dataset.base === '/search' ? '?q=' + encodeURIComponent(urlP().get('q') ?? '') : '')); break;
+    case 'like': case 'dislike': vote(cur.video.vid, d.act); break;
+    case 'later': toggleLater(cur.video.vid); break;
+    case 'play': play(); break;
+    case 'retry': el.parentNode._load?.(); break;
+    case 'retry-route': route(false); break;
+  }
+});
+$('#sf').addEventListener('submit', (e) => { e.preventDefault(); const q = $('#q').value.trim(); if (q) go('/search?q=' + encodeURIComponent(q)); });
+$('#lang').onclick = () => { setLang(lang === 'en' ? 'zh' : 'en'); toast(t('toast.lang')); };
+$('#theme').onclick = () => { themePref = darkNow() ? 'light' : 'dark'; store.set('theme', themePref); applyTheme(); if (location.pathname === '/settings') settings(); };
+$('#menu').onclick = () => {
+  if (matchMedia('(max-width:800px)').matches) document.body.classList.toggle('drawer');
+  else { document.body.classList.toggle('collapsed'); store.set('collapsed', document.body.classList.contains('collapsed')); }
+};
+$('#scrim').onclick = () => document.body.classList.remove('drawer');
+addEventListener('popstate', () => route(true));
+
+const SHORTCUTS = [['/', 'sc.search'], ['j / k', 'sc.move'], ['Enter', 'sc.open'], ['l', 'sc.like'], ['w', 'sc.later'], ['p', 'sc.play'], ['h', 'sc.home'], ['?', 'sc.help'], ['Esc', 'sc.esc']];
+function toggleHelp(force) {
+  const h = $('#help'), show = force ?? !h.classList.contains('on');
+  h.innerHTML = `<div class="hc" role="dialog" aria-modal="true" aria-label="${esc(t('sc.title'))}"><h3>${esc(t('sc.title'))}</h3>
+    <table>${SHORTCUTS.map(([k, d]) => `<tr><td>${k.split(' / ').map((x) => `<kbd>${esc(x)}</kbd>`).join(' / ')}</td><td>${esc(t(d))}</td></tr>`).join('')}</table>
+    <p><button class="btn" id="hclose">${esc(t('sc.close'))}</button></p></div>`;
+  h.classList.toggle('on', show);
+  if (show) $('#hclose').onclick = () => toggleHelp(false), $('#hclose').focus();
+}
+function select(delta) {
+  const items = [...view.querySelectorAll('.card[data-vid],.rel')], i = items.findIndex((x) => x.classList.contains('sel'));
+  if (!items.length) return;
+  items[i]?.classList.remove('sel');
+  const n = items[Math.min(items.length - 1, Math.max(0, i < 0 ? (delta > 0 ? 0 : items.length - 1) : i + delta))];
+  n.classList.add('sel'); n.scrollIntoView({ block: 'nearest' });
+}
+addEventListener('keydown', (e) => {
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const typing = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName) || e.target.isContentEditable;
+  if (e.key === 'Escape') { if ($('#help').classList.contains('on')) toggleHelp(false); else if (typing) e.target.blur(); else view.querySelector('.sel')?.classList.remove('sel'); return; }
+  if (typing) return;
+  const sel = view.querySelector('.sel')?.dataset.vid ?? cur?.video.vid;
+  switch (e.key) {
+    case '/': e.preventDefault(); $('#q').focus(); $('#q').select(); break;
+    case '?': toggleHelp(); break;
+    case 'j': select(1); break;
+    case 'k': select(-1); break;
+    case 'Enter': { const s = view.querySelector('.sel'); if (s && !e.target.closest('a,button')) go('/watch/' + s.dataset.vid); break; }
+    case 'l': if (sel) vote(sel, 'like'); break;
+    case 'w': if (sel) toggleLater(sel); break;
+    case 'p': play(); break;
+    case 'h': go('/'); break;
+  }
+});
+
+if (store.get('collapsed', false)) document.body.classList.add('collapsed');
+api('/api/stats').then((s) => { hasMeta = !!s.hasMeta; }, () => {}).finally(() => { chrome(); route(true); });
+</script>
+</body>
+</html>
